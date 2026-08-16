@@ -1,0 +1,62 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{05F601BC-8054-409B-B984-89776F6510DF}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityVoting.Domain", "src\CommunityVoting.Domain\CommunityVoting.Domain.csproj", "{B9D88030-DFAC-40E4-8A99-6BB09E2EDB54}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityVoting.Application", "src\CommunityVoting.Application\CommunityVoting.Application.csproj", "{6CEA8E18-6D19-4B99-BBBC-74A4871DF003}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityVoting.Infrastructure", "src\CommunityVoting.Infrastructure\CommunityVoting.Infrastructure.csproj", "{E1F319E2-2BE4-4ECE-BFBE-698FD3642E7A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityVoting.API", "src\CommunityVoting.API\CommunityVoting.API.csproj", "{CFB21FBE-CD54-4BB1-8FA1-5A0EFF197C29}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityVoting.Voting.Api", "src\CommunityVoting.Voting.Api\CommunityVoting.Voting.Api.csproj", "{E4969BE5-B68A-4B47-995D-688CAB060DEA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommunityVoting.AppHost", "src\CommunityVoting.AppHost\CommunityVoting.AppHost.csproj", "{AAF03E5F-AB95-4D8D-972F-3405BAA072EA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B9D88030-DFAC-40E4-8A99-6BB09E2EDB54}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B9D88030-DFAC-40E4-8A99-6BB09E2EDB54}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B9D88030-DFAC-40E4-8A99-6BB09E2EDB54}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B9D88030-DFAC-40E4-8A99-6BB09E2EDB54}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6CEA8E18-6D19-4B99-BBBC-74A4871DF003}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6CEA8E18-6D19-4B99-BBBC-74A4871DF003}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6CEA8E18-6D19-4B99-BBBC-74A4871DF003}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6CEA8E18-6D19-4B99-BBBC-74A4871DF003}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E1F319E2-2BE4-4ECE-BFBE-698FD3642E7A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E1F319E2-2BE4-4ECE-BFBE-698FD3642E7A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E1F319E2-2BE4-4ECE-BFBE-698FD3642E7A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E1F319E2-2BE4-4ECE-BFBE-698FD3642E7A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CFB21FBE-CD54-4BB1-8FA1-5A0EFF197C29}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CFB21FBE-CD54-4BB1-8FA1-5A0EFF197C29}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CFB21FBE-CD54-4BB1-8FA1-5A0EFF197C29}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CFB21FBE-CD54-4BB1-8FA1-5A0EFF197C29}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E4969BE5-B68A-4B47-995D-688CAB060DEA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E4969BE5-B68A-4B47-995D-688CAB060DEA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E4969BE5-B68A-4B47-995D-688CAB060DEA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E4969BE5-B68A-4B47-995D-688CAB060DEA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AAF03E5F-AB95-4D8D-972F-3405BAA072EA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AAF03E5F-AB95-4D8D-972F-3405BAA072EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AAF03E5F-AB95-4D8D-972F-3405BAA072EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AAF03E5F-AB95-4D8D-972F-3405BAA072EA}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{B9D88030-DFAC-40E4-8A99-6BB09E2EDB54} = {05F601BC-8054-409B-B984-89776F6510DF}
+		{6CEA8E18-6D19-4B99-BBBC-74A4871DF003} = {05F601BC-8054-409B-B984-89776F6510DF}
+		{E1F319E2-2BE4-4ECE-BFBE-698FD3642E7A} = {05F601BC-8054-409B-B984-89776F6510DF}
+		{CFB21FBE-CD54-4BB1-8FA1-5A0EFF197C29} = {05F601BC-8054-409B-B984-89776F6510DF}
+		{E4969BE5-B68A-4B47-995D-688CAB060DEA} = {05F601BC-8054-409B-B984-89776F6510DF}
+		{AAF03E5F-AB95-4D8D-972F-3405BAA072EA} = {05F601BC-8054-409B-B984-89776F6510DF}
+	EndGlobalSection
+EndGlobal
