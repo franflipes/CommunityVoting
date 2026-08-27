@@ -75,3 +75,18 @@ CREATE TABLE "Documents" (
     "UploadedByUserId" UUID NOT NULL REFERENCES "Users"("Id") ON DELETE RESTRICT,
     "UploadedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT (now() at time zone 'utc')
 );
+
+CREATE TABLE "MeetingVoterAccesses" (
+    "Id" UUID PRIMARY KEY,
+    "MeetingId" UUID NOT NULL REFERENCES "Meetings"("Id") ON DELETE CASCADE,
+    "UserId" UUID NOT NULL REFERENCES "Users"("Id") ON DELETE RESTRICT,
+    "TokenHash" VARCHAR(255) NOT NULL,
+    "CodeHash" VARCHAR(255) NOT NULL,
+    "CreatedAt" TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT (now() at time zone 'utc'),
+    "ExpiresAt" TIMESTAMP WITH TIME ZONE,
+    "LastUsedAt" TIMESTAMP WITH TIME ZONE,
+    "IsRevoked" BOOLEAN NOT NULL DEFAULT FALSE,
+    "FailedAttempts" INT NOT NULL DEFAULT 0,
+    CONSTRAINT "UQ_MeetingVoterAccess" UNIQUE ("MeetingId", "UserId")
+);
+CREATE INDEX "IX_MeetingVoterAccesses_TokenHash" ON "MeetingVoterAccesses" ("TokenHash");

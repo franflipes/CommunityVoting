@@ -2,7 +2,7 @@ import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import { ThemeToggle } from './ThemeToggle';
-import { Vote, LogOut, User as UserIcon, Building2, Shield, Settings } from 'lucide-react';
+import { Vote, LogOut, User as UserIcon, Building2, Shield } from 'lucide-react';
 import { UserRole } from '../types';
 
 export const Navbar: React.FC = () => {
@@ -62,12 +62,6 @@ export const Navbar: React.FC = () => {
               <Link to="/communities" className="btn btn-secondary btn-sm">
                 <Building2 size={16} /> Comunidades
               </Link>
-
-              {isAdmin && (
-                <Link to="/admin/settings" className="btn btn-secondary btn-sm">
-                  <Settings size={16} /> Configuración
-                </Link>
-              )}
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '6px 14px', borderRadius: '12px', background: 'var(--bg-surface)', border: '1px solid var(--border-glass)' }}>
                 <div style={{ width: '32px', height: '32px', borderRadius: '50%', background: 'var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

@@ -4,7 +4,7 @@ using CommunityVoting.Domain.Entities;
 
 namespace CommunityVoting.Application.Services;
 
-public class DocumentService
+public class DocumentService : IDocumentService
 {
     private readonly IDocumentRepository _documentRepository;
     private readonly IProposalRepository _proposalRepository;

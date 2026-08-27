@@ -5,7 +5,7 @@ using CommunityVoting.Domain.Enums;
 
 namespace CommunityVoting.Application.Services;
 
-public class InvitationService
+public class InvitationService : IInvitationService
 {
     private readonly ICommunityInvitationRepository _invitationRepository;
     private readonly ICommunityRepository _communityRepository;

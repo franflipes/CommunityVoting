@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { AuthProvider, useAuth } from './contexts/AuthContext';
 import { Layout } from './components/Layout';
 import { LoginPage } from './pages/LoginPage';
+import { MeetingAccessPage } from './pages/MeetingAccessPage';
 import { CommunitiesPage } from './pages/CommunitiesPage';
 import { CommunityDetailPage } from './pages/CommunityDetailPage';
 import { MeetingDetailPage } from './pages/MeetingDetailPage';
@@ -27,6 +28,7 @@ export const App: React.FC = () => {
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<LoginPage />} />
+            <Route path="/meeting/access/:token" element={<MeetingAccessPage />} />
             <Route path="/join" element={<JoinCommunityPage />} />
 
             <Route

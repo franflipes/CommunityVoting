@@ -4,7 +4,7 @@ using CommunityVoting.Domain.Entities;
 
 namespace CommunityVoting.Application.Services;
 
-public class ProposalService
+public class ProposalService : IProposalService
 {
     private readonly IProposalRepository _proposalRepository;
     private readonly IMeetingRepository _meetingRepository;
@@ -52,6 +52,37 @@ public class ProposalService
 
         proposal.MajorityType = request.MajorityType;
         proposal.MajorityPercentage = request.MajorityPercentage;
+
+        await _proposalRepository.UpdateAsync(proposal);
+        return MapToDto(proposal);
+    }
+
+    public async Task<ProposalDto?> UpdateProposalAsync(Guid proposalId, UpdateProposalRequest request)
+    {
+        var proposal = await _proposalRepository.GetByIdAsync(proposalId);
+        if (proposal == null) return null;
+
+        proposal.Title = request.Title;
+        proposal.Description = request.Description ?? string.Empty;
+        proposal.Order = request.Order;
+        proposal.MajorityType = request.MajorityType;
+        proposal.MajorityPercentage = request.MajorityPercentage;
+
+        if (request.Options != null && request.Options.Any())
+        {
+            foreach (var opt in proposal.Options.ToList())
+            {
+                await _proposalRepository.DeleteOptionAsync(opt.Id);
+            }
+            proposal.Options.Clear();
+
+            foreach (var label in request.Options)
+            {
+                var newOpt = ProposalOption.Create(proposal.Id, label);
+                await _proposalRepository.AddOptionAsync(newOpt);
+                proposal.Options.Add(newOpt);
+            }
+        }
 
         await _proposalRepository.UpdateAsync(proposal);
         return MapToDto(proposal);

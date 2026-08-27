@@ -37,6 +37,15 @@ public record UpdateProposalMajorityRequest(
     decimal? MajorityPercentage
 );
 
+public record UpdateProposalRequest(
+    string Title,
+    string? Description,
+    int Order = 1,
+    MajorityType? MajorityType = null,
+    decimal? MajorityPercentage = null,
+    List<string>? Options = null
+);
+
 public record CreateProposalOptionRequest(
     Guid ProposalId,
     string Label

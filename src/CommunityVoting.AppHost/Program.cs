@@ -1,22 +1,48 @@
 var builder = DistributedApplication.CreateBuilder(args);
 
-// 1. Connection string for local PostgreSQL installed on port 5432
-var postgres = builder.AddConnectionString("postgres");
+// 1. PostgreSQL container on host port 5433 + PgAdmin container dashboard on port 5050
+var password = builder.AddParameter("postgres-password", "postgres", secret: true);
 
-// 2. Monitoring resource card in Aspire Dashboard for local PostgreSQL port 5432
-builder.AddExecutable("postgres-local", "powershell", ".",
-    "-Command", "$port=5432; Write-Host 'Monitoring Local PostgreSQL on port 5432...'; while ($true) { $c = Test-NetConnection -ComputerName localhost -Port $port -WarningAction SilentlyContinue; if ($c.TcpTestSucceeded) { Write-Host \"[$(Get-Date -Format 'HH:mm:ss')] PostgreSQL Local (port $port) is ONLINE\" } else { Write-Host \"[$(Get-Date -Format 'HH:mm:ss')] PostgreSQL Local (port $port) is OFFLINE\" }; Start-Sleep -Seconds 10 }")
-    .ExcludeFromManifest();
+var postgres = builder.AddPostgres("postgres", password, port: 5433)
+    .WithPgAdmin(c => c.WithHostPort(5050))
+    .WithDataVolume("communityvoting-postgres-data");
+
+var db = postgres.AddDatabase("communityvoting");
+
+// 2. Azurite (Azure Blob & Queue Storage Emulator) Container
+var storage = builder.AddAzureStorage("storage")
+    .RunAsEmulator(c => c.WithDataVolume("communityvoting-azurite-data"));
+var blobs = storage.AddBlobs("blobs");
+var queues = storage.AddQueues("queues");
 
 var votingApi = builder.AddProject<Projects.CommunityVoting_Voting_Api>("voting-api")
-    .WithReference(postgres);
+    .WithReference(db, "postgres")
+    .WaitFor(postgres);
+
+var documentApi = builder.AddProject<Projects.CommunityVoting_Document_Api>("document-api")
+    .WithReference(db, "postgres")
+    .WithReference(blobs)
+    .WaitFor(postgres);
 
 var mainApi = builder.AddProject<Projects.CommunityVoting_API>("main-api")
     .WithReference(votingApi)
-    .WithReference(postgres)
-    .WithEnvironment("VotingService__BaseUrl", "http://voting-api");
+    .WithReference(documentApi)
+    .WithReference(db, "postgres")
+    .WithReference(blobs)
+    .WithReference(queues)
+    .WithEnvironment("VotingService__BaseUrl", "http://voting-api")
+    .WithEnvironment("DocumentService__BaseUrl", "http://document-api")
+    .WaitFor(postgres);
 
 // Configure Voting.Api to connect back to main API
-votingApi.WithEnvironment("ApiBaseUrl", "http://main-api");
+votingApi.WithReference(mainApi);
+
+// 3. Add Vite React Frontend
+builder.AddNpmApp("frontend", "../../frontend", "dev")
+    .WithReference(mainApi)
+    .WithReference(votingApi)
+    .WithReference(documentApi)
+    .WithHttpEndpoint(env: "PORT")
+    .WithExternalHttpEndpoints();
 
 builder.Build().Run();

@@ -29,3 +29,13 @@ public record AuthResponse(
     string Token,
     UserDto User
 );
+
+public record ResetPasswordRequest(
+    string Email,
+    string NewPassword
+);
+
+public record ChangePasswordRequest(
+    string OldPassword,
+    string NewPassword
+);

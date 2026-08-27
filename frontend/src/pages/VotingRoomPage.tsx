@@ -210,6 +210,22 @@ export const VotingRoomPage: React.FC = () => {
   const isOpen = session.state === VotingState.Open;
   const isClosed = session.state === VotingState.Closed;
 
+  const majorityType = session.majorityType ?? 1;
+  const majorityPct = session.majorityPercentage;
+  const getMajorityInfo = () => {
+    switch (majorityType) {
+      case 1:
+        return { title: 'Mayoría Simple', desc: 'Requiere más votos A Favor que En Contra' };
+      case 2:
+        return { title: 'Mayoría Absoluta', desc: 'Requiere más del 50% de los votos emitidos' };
+      case 3:
+        return { title: `Mayoría Cualificada (${majorityPct || 66.67}%)`, desc: `Requiere al menos el ${majorityPct || 66.67}% de votos a favor` };
+      default:
+        return { title: 'Mayoría Simple', desc: 'Requiere más votos A Favor que En Contra' };
+    }
+  };
+  const majorityInfo = getMajorityInfo();
+
   return (
     <div>
       {/* Breadcrumb */}
@@ -264,19 +280,34 @@ export const VotingRoomPage: React.FC = () => {
         </div>
       )}
 
-      {/* 2. Quorum & Live Participation Bar */}
+      {/* 2. Regla de Mayoría & Participación en Tiempo Real */}
       <div className="glass-panel" style={{ padding: '24px', marginBottom: '28px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
-          <span style={{ fontSize: '0.9rem', fontWeight: '700', color: 'var(--text-primary)', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Users size={18} color="var(--accent)" /> Quórum de Participación Comunitaria
-          </span>
-          <span style={{ fontSize: '0.95rem', fontWeight: '800', color: 'var(--accent)' }}>
-            {session.liveStats?.totalVotesCast || 0} de {session.liveStats?.totalBallots || 0} Votos Emitidos ({session.liveStats?.participationPercentage?.toFixed(1) || 0}%)
-          </span>
-        </div>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px', alignItems: 'center' }}>
+          <div>
+            <span style={{ fontSize: '0.8rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--accent)', fontWeight: '700' }}>
+              Regla de Mayoría Requerida
+            </span>
+            <h3 style={{ fontSize: '1.15rem', color: 'white', marginTop: '2px' }}>
+              {majorityInfo.title}
+            </h3>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '4px' }}>
+              {majorityInfo.desc}
+            </p>
+          </div>
 
-        <div className="progress-bar-bg">
-          <div className="progress-bar-fill" style={{ width: `${session.liveStats?.participationPercentage || 0}%` }}></div>
+          <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <span style={{ fontSize: '0.85rem', fontWeight: '600', color: 'var(--text-secondary)' }}>
+                Participación en la Votación
+              </span>
+              <span style={{ fontSize: '0.9rem', fontWeight: '800', color: 'var(--accent)' }}>
+                {session.liveStats?.totalVotesCast || 0} de {session.liveStats?.totalBallots || 0} Votos ({session.liveStats?.participationPercentage?.toFixed(1) || 0}%)
+              </span>
+            </div>
+            <div className="progress-bar-bg">
+              <div className="progress-bar-fill" style={{ width: `${session.liveStats?.participationPercentage || 0}%` }}></div>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -380,11 +411,8 @@ export const VotingRoomPage: React.FC = () => {
                 
                 <div style={{ fontSize: '0.82rem', color: 'var(--text-secondary)', display: 'flex', justifyContent: 'center', gap: '16px', flexWrap: 'wrap', marginTop: '10px' }}>
                   <span>Cerrado por: {result.closedByUserName}</span>
-                  {result.quorumRequired != null && (
-                    <span>
-                      Quórum: {result.quorumReached ? 'Alcanzado ✓' : 'No alcanzado ❌'} ({result.presentMembers || 0}/{result.eligibleMembers || 0})
-                    </span>
-                  )}
+                  <span>Criterio: {majorityInfo.title}</span>
+                  <span>Total Votos Emitidos: {result.totalVotesCast}</span>
                 </div>
               </div>
 

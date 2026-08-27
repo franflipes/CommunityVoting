@@ -1,0 +1,259 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:viewmodels="clr-namespace:CommunityVoting.Maui.ViewModels"
+             x:Class="CommunityVoting.Maui.Views.LoginPage"
+             Title="Iniciar Sesión"
+             BackgroundColor="#F8FAFC">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="24" Spacing="24" VerticalOptions="Center">
+            
+            <!-- Header Icon & Title -->
+            <VerticalStackLayout Spacing="8" HorizontalOptions="Center">
+                <Border WidthRequest="72" HeightRequest="72" BackgroundColor="#EEF2FF" Stroke="#C7D2FE" StrokeThickness="1" HorizontalOptions="Center">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="20"/>
+                    </Border.StrokeShape>
+                    <Image Source="appicon.svg" WidthRequest="44" HeightRequest="44" HorizontalOptions="Center" VerticalOptions="Center"/>
+                </Border>
+                
+                <Label Text="CommunityVoting" 
+                       FontSize="28" 
+                       FontAttributes="Bold" 
+                       TextColor="#0F172A" 
+                       HorizontalOptions="Center"
+                       Margin="0,8,0,0"/>
+
+                <Label Text="Accede a tus juntas y vota en tiempo real" 
+                       FontSize="14" 
+                       TextColor="#64748B" 
+                       HorizontalOptions="Center"/>
+            </VerticalStackLayout>
+
+            <!-- LOGIN MODE CARD -->
+            <Border IsVisible="{Binding IsStandardLoginMode}"
+                    Stroke="#E2E8F0" StrokeThickness="1" BackgroundColor="#FFFFFF" Padding="24">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="16"/>
+                </Border.StrokeShape>
+
+                <VerticalStackLayout Spacing="18">
+
+                    <VerticalStackLayout Spacing="6">
+                        <Label Text="Correo Electrónico" TextColor="#334155" FontSize="13" FontAttributes="Bold"/>
+                        <Border Stroke="#CBD5E1" StrokeThickness="1" BackgroundColor="#F8FAFC" Padding="4,0">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="8"/>
+                            </Border.StrokeShape>
+                            <Entry Text="{Binding Email}" 
+                                   Placeholder="tuemail@comunidad.com" 
+                                   PlaceholderColor="#94A3B8" 
+                                   TextColor="#0F172A" 
+                                   BackgroundColor="Transparent"
+                                   Keyboard="Email"/>
+                        </Border>
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout Spacing="6">
+                        <Label Text="Contraseña" TextColor="#334155" FontSize="13" FontAttributes="Bold"/>
+                        <Border Stroke="#CBD5E1" StrokeThickness="1" BackgroundColor="#F8FAFC" Padding="4,0">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="8"/>
+                            </Border.StrokeShape>
+                            <Entry Text="{Binding Password}" 
+                                   IsPassword="True" 
+                                   Placeholder="••••••••" 
+                                   PlaceholderColor="#94A3B8" 
+                                   TextColor="#0F172A" 
+                                   BackgroundColor="Transparent"/>
+                        </Border>
+                    </VerticalStackLayout>
+
+                    <Button Text="¿Olvidaste tu contraseña?" 
+                            Command="{Binding ToggleResetModeCommand}"
+                            BackgroundColor="Transparent"
+                            TextColor="#4F46E5"
+                            FontSize="13"
+                            HorizontalOptions="End"
+                            Padding="0"/>
+
+                    <Label Text="{Binding ErrorMessage}" 
+                           TextColor="#EF4444" 
+                           FontSize="13" 
+                           IsVisible="{Binding ErrorMessage, Converter={StaticResource StringNotNullOrEmptyConverter}}"
+                           HorizontalOptions="Center"/>
+
+                    <Label Text="{Binding SuccessMessage}" 
+                           TextColor="#10B981" 
+                           FontSize="13" 
+                           IsVisible="{Binding SuccessMessage, Converter={StaticResource StringNotNullOrEmptyConverter}}"
+                           HorizontalOptions="Center"/>
+
+                    <Button Text="Entrar a la Comunidad" 
+                            Command="{Binding LoginCommand}" 
+                            IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}"
+                            BackgroundColor="#4F46E5" 
+                            TextColor="White" 
+                            FontAttributes="Bold"
+                            CornerRadius="10"
+                            HeightRequest="48"
+                            Margin="0,4,0,0"/>
+
+                    <Button Text="🔑 Acceder con Enlace / Código de Reunión" 
+                            Command="{Binding ToggleTokenAccessModeCommand}"
+                            BackgroundColor="#EEF2FF"
+                            TextColor="#4F46E5"
+                            FontAttributes="Bold"
+                            CornerRadius="10"
+                            HeightRequest="44"
+                            Margin="0,4,0,0"/>
+
+                    <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" Color="#4F46E5" HorizontalOptions="Center"/>
+
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- MEETING TOKEN ACCESS MODE CARD -->
+            <Border IsVisible="{Binding IsTokenAccessMode}"
+                    Stroke="#818CF8" StrokeThickness="1.5" BackgroundColor="#FFFFFF" Padding="24">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="16"/>
+                </Border.StrokeShape>
+
+                <VerticalStackLayout Spacing="16">
+
+                    <Label Text="Acceso a Reunión" FontSize="18" FontAttributes="Bold" TextColor="#0F172A" HorizontalOptions="Center"/>
+                    <Label Text="Introduce el token o enlace recibido y tu código de 6 dígitos." FontSize="13" TextColor="#64748B" HorizontalOptions="Center"/>
+
+                    <VerticalStackLayout Spacing="6">
+                        <Label Text="Enlace o Token de Acceso" TextColor="#334155" FontSize="13" FontAttributes="Bold"/>
+                        <Border Stroke="#CBD5E1" StrokeThickness="1" BackgroundColor="#F8FAFC" Padding="4,0">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="8"/>
+                            </Border.StrokeShape>
+                            <Entry Text="{Binding TokenOrUrl}" 
+                                   Placeholder="Pega el enlace o token aquí" 
+                                   PlaceholderColor="#94A3B8" 
+                                   TextColor="#0F172A" 
+                                   BackgroundColor="Transparent"/>
+                        </Border>
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout Spacing="6">
+                        <Label Text="Código de Acceso (6 dígitos)" TextColor="#334155" FontSize="13" FontAttributes="Bold"/>
+                        <Border Stroke="#CBD5E1" StrokeThickness="1" BackgroundColor="#F8FAFC" Padding="4,0">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="8"/>
+                            </Border.StrokeShape>
+                            <Entry Text="{Binding AccessCode}" 
+                                   Placeholder="Ej. 482913" 
+                                   PlaceholderColor="#94A3B8" 
+                                   TextColor="#0F172A" 
+                                   BackgroundColor="Transparent"
+                                   Keyboard="Numeric"/>
+                        </Border>
+                    </VerticalStackLayout>
+
+                    <Label Text="{Binding ErrorMessage}" 
+                           TextColor="#EF4444" 
+                           FontSize="13" 
+                           IsVisible="{Binding ErrorMessage, Converter={StaticResource StringNotNullOrEmptyConverter}}"
+                           HorizontalOptions="Center"/>
+
+                    <Button Text="Entrar a la Reunión" 
+                            Command="{Binding LoginWithTokenCommand}" 
+                            IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}"
+                            BackgroundColor="#4F46E5" 
+                            TextColor="White" 
+                            FontAttributes="Bold"
+                            CornerRadius="10"
+                            HeightRequest="48"
+                            Margin="0,6,0,0"/>
+
+                    <Button Text="← Volver a Iniciar Sesión" 
+                            Command="{Binding ToggleTokenAccessModeCommand}"
+                            BackgroundColor="Transparent"
+                            TextColor="#64748B"
+                            FontSize="13"
+                            HorizontalOptions="Center"/>
+
+                    <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" Color="#4F46E5" HorizontalOptions="Center"/>
+
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- RESET PASSWORD MODE CARD -->
+            <Border IsVisible="{Binding IsResetMode}"
+                    Stroke="#C7D2FE" StrokeThickness="1.5" BackgroundColor="#FFFFFF" Padding="24">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="16"/>
+                </Border.StrokeShape>
+
+                <VerticalStackLayout Spacing="16">
+
+                    <Label Text="Restablecer Contraseña" FontSize="18" FontAttributes="Bold" TextColor="#0F172A" HorizontalOptions="Center"/>
+                    <Label Text="Introduce tu correo y tu nueva contraseña." FontSize="13" TextColor="#64748B" HorizontalOptions="Center"/>
+
+                    <VerticalStackLayout Spacing="6">
+                        <Label Text="Tu Correo Electrónico" TextColor="#334155" FontSize="13" FontAttributes="Bold"/>
+                        <Border Stroke="#CBD5E1" StrokeThickness="1" BackgroundColor="#F8FAFC" Padding="4,0">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="8"/>
+                            </Border.StrokeShape>
+                            <Entry Text="{Binding Email}" 
+                                   Placeholder="tuemail@comunidad.com" 
+                                   PlaceholderColor="#94A3B8" 
+                                   TextColor="#0F172A" 
+                                   BackgroundColor="Transparent"
+                                   Keyboard="Email"/>
+                        </Border>
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout Spacing="6">
+                        <Label Text="Nueva Contraseña" TextColor="#334155" FontSize="13" FontAttributes="Bold"/>
+                        <Border Stroke="#CBD5E1" StrokeThickness="1" BackgroundColor="#F8FAFC" Padding="4,0">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="8"/>
+                            </Border.StrokeShape>
+                            <Entry Text="{Binding NewPassword}" 
+                                   IsPassword="True" 
+                                   Placeholder="Mínimo 6 caracteres" 
+                                   PlaceholderColor="#94A3B8" 
+                                   TextColor="#0F172A" 
+                                   BackgroundColor="Transparent"/>
+                        </Border>
+                    </VerticalStackLayout>
+
+                    <Label Text="{Binding ErrorMessage}" 
+                           TextColor="#EF4444" 
+                           FontSize="13" 
+                           IsVisible="{Binding ErrorMessage, Converter={StaticResource StringNotNullOrEmptyConverter}}"
+                           HorizontalOptions="Center"/>
+
+                    <Button Text="Guardar Nueva Contraseña" 
+                            Command="{Binding ResetPasswordCommand}" 
+                            IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}"
+                            BackgroundColor="#10B981" 
+                            TextColor="White" 
+                            FontAttributes="Bold"
+                            CornerRadius="10"
+                            HeightRequest="48"
+                            Margin="0,6,0,0"/>
+
+                    <Button Text="← Volver a Iniciar Sesión" 
+                            Command="{Binding ToggleResetModeCommand}"
+                            BackgroundColor="Transparent"
+                            TextColor="#64748B"
+                            FontSize="13"
+                            HorizontalOptions="Center"/>
+
+                    <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" Color="#10B981" HorizontalOptions="Center"/>
+
+                </VerticalStackLayout>
+            </Border>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

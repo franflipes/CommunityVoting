@@ -1,0 +1,15 @@
+Hola {{FirstName}},
+
+Tienes una nueva reunión programada en {{CommunityName}}.
+
+Título: {{MeetingTitle}}
+Fecha: {{MeetingDate}}
+Hora: {{MeetingTime}}
+
+Enlace de acceso a la reunión:
+{{AccessUrl}}
+
+Tu código de acceso individual:
+{{AccessCode}}
+
+Este código es personal y confidencial. Si no esperabas este correo, puedes ignorarlo.

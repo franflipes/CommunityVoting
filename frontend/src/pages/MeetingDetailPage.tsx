@@ -1,16 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { HubConnectionBuilder } from '@microsoft/signalr';
-import { apiClient, votingApiClient, API_BASE_URL, VOTING_HUB_URL } from '../api/client';
+import { apiClient, votingApiClient, documentApiClient, API_BASE_URL, VOTING_HUB_URL } from '../api/client';
 import { useAuth } from '../contexts/AuthContext';
-import { Meeting, VotingState, AgendaItem, QuorumStatus, VotingSettings } from '../types';
+import { Meeting, VotingState, AgendaItem, QuorumStatus, VotingSettings, Proposal } from '../types';
 import { CreateAgendaItemModal } from '../components/CreateAgendaItemModal';
 import { CreateProposalModal } from '../components/CreateProposalModal';
+import { EditProposalModal } from '../components/EditProposalModal';
 import { UploadDocumentModal } from '../components/UploadDocumentModal';
 import { QuorumCard } from '../components/QuorumCard';
 import { VotingSettingsModal } from '../components/VotingSettingsModal';
 import { EditMeetingModal } from '../components/EditMeetingModal';
 import { AttendanceListModal } from '../components/AttendanceListModal';
+import { VoterAccessListModal } from '../components/VoterAccessListModal';
 import {
   Calendar,
   MapPin,
@@ -29,6 +31,7 @@ import {
   ShieldCheck,
   Edit3,
   UserCheck,
+  KeyRound,
 } from 'lucide-react';
 
 export const MeetingDetailPage: React.FC = () => {
@@ -48,8 +51,10 @@ export const MeetingDetailPage: React.FC = () => {
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isEditMeetingOpen, setIsEditMeetingOpen] = useState(false);
   const [isAttendanceListOpen, setIsAttendanceListOpen] = useState(false);
+  const [isVoterAccessModalOpen, setIsVoterAccessModalOpen] = useState(false);
   const [selectedAgendaItemId, setSelectedAgendaItemId] = useState<string | undefined>(undefined);
   const [uploadDocProposalId, setUploadDocProposalId] = useState<string | null>(null);
+  const [editingProposal, setEditingProposal] = useState<Proposal | null>(null);
 
   useEffect(() => {
     if (id) {
@@ -145,6 +150,10 @@ export const MeetingDetailPage: React.FC = () => {
 
   const handleStartVoting = async (proposal: any) => {
     if (!meeting) return;
+    if (new Date() < new Date(meeting.scheduledAt)) {
+      alert(`No se puede iniciar la votación antes de la fecha y hora de celebración de la reunión (${new Date(meeting.scheduledAt).toLocaleString()}).`);
+      return;
+    }
     try {
       const createRes = await votingApiClient.post('/sessions', {
         proposalId: proposal.id,
@@ -171,14 +180,29 @@ export const MeetingDetailPage: React.FC = () => {
     }
   };
 
-  const handleDownloadDoc = (docId: string) => {
-    window.open(`${API_BASE_URL}/documents/${docId}/download`, '_blank');
+  const handleDownloadDoc = async (docId: string, fileName: string) => {
+    try {
+      const response = await documentApiClient.get(`/documents/${docId}/download`, {
+        responseType: 'blob',
+      });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', fileName || 'documento');
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Error descargando el documento', err);
+      alert('Error descargando el documento');
+    }
   };
 
   const handleDeleteDoc = async (docId: string) => {
     if (!window.confirm('¿Deseas eliminar este documento adjunto?')) return;
     try {
-      await apiClient.delete(`/documents/${docId}`);
+      await documentApiClient.delete(`/documents/${docId}`);
       fetchMeeting();
     } catch (err) {
       alert('Error eliminando documento');
@@ -229,6 +253,13 @@ export const MeetingDetailPage: React.FC = () => {
 
           {isAdmin && (
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+              <button
+                onClick={() => setIsVoterAccessModalOpen(true)}
+                className="btn btn-secondary"
+                title="Gestionar enlaces y códigos de acceso para votantes"
+              >
+                <KeyRound size={16} /> Accesos de Votantes
+              </button>
               <button
                 onClick={() => setIsEditMeetingOpen(true)}
                 className="btn btn-secondary"
@@ -389,6 +420,11 @@ export const MeetingDetailPage: React.FC = () => {
                           </div>
 
                           <div style={{ display: 'flex', gap: '10px' }}>
+                            {isAdmin && !isClosed && !isOpen && (
+                              <button onClick={() => setEditingProposal(proposal)} className="btn btn-secondary btn-sm" title="Editar propuesta">
+                                <Edit3 size={14} /> Editar
+                              </button>
+                            )}
                             {isAdmin && !isClosed && (
                               <button onClick={() => handleStartVoting(proposal)} className="btn btn-primary btn-sm">
                                 <Play size={14} /> {isOpen ? 'Ir a Sala En Vivo' : 'Iniciar Votación'}
@@ -458,7 +494,7 @@ export const MeetingDetailPage: React.FC = () => {
                                   </div>
 
                                   <div style={{ display: 'flex', gap: '6px' }}>
-                                    <button onClick={() => handleDownloadDoc(doc.id)} className="btn btn-secondary btn-sm" style={{ padding: '4px 8px' }} title="Descargar">
+                                    <button onClick={() => handleDownloadDoc(doc.id, doc.fileName)} className="btn btn-secondary btn-sm" style={{ padding: '4px 8px' }} title="Descargar">
                                       <Download size={13} />
                                     </button>
                                     {isAdmin && (
@@ -540,6 +576,22 @@ export const MeetingDetailPage: React.FC = () => {
           meetingTitle={meeting.title}
           isOpen={isAttendanceListOpen}
           onClose={() => setIsAttendanceListOpen(false)}
+        />
+      )}
+      {meeting && (
+        <VoterAccessListModal
+          meetingId={meeting.id}
+          meetingTitle={meeting.title}
+          isOpen={isVoterAccessModalOpen}
+          onClose={() => setIsVoterAccessModalOpen(false)}
+        />
+      )}
+      {editingProposal && (
+        <EditProposalModal
+          proposal={editingProposal}
+          isOpen={!!editingProposal}
+          onClose={() => setEditingProposal(null)}
+          onSuccess={() => fetchMeeting()}
         />
       )}
     </div>

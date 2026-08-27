@@ -47,6 +47,7 @@ public record VotingEligibleDataDto(
     int PresentMembers,
     int QuorumRequired,
     bool QuorumReached,
+    bool RequireQuorumForVoting,
     List<EligibleVoterDto> Voters
 );
 

@@ -4,15 +4,20 @@ using CommunityVoting.Domain.Entities;
 
 namespace CommunityVoting.Application.Services;
 
-public class MeetingService
+public class MeetingService : IMeetingService
 {
     private readonly IMeetingRepository _meetingRepository;
     private readonly ICommunityRepository _communityRepository;
+    private readonly IMeetingAccessService _meetingAccessService;
 
-    public MeetingService(IMeetingRepository meetingRepository, ICommunityRepository communityRepository)
+    public MeetingService(
+        IMeetingRepository meetingRepository,
+        ICommunityRepository communityRepository,
+        IMeetingAccessService meetingAccessService)
     {
         _meetingRepository = meetingRepository;
         _communityRepository = communityRepository;
+        _meetingAccessService = meetingAccessService;
     }
 
     public async Task<MeetingDto?> CreateMeetingAsync(CreateMeetingRequest request)
@@ -32,6 +37,7 @@ public class MeetingService
         );
 
         await _meetingRepository.AddAsync(meeting);
+        await _meetingAccessService.CreateAccessForEligibleMembersAsync(meeting.Id, "http://localhost:5173");
 
         var vsDto = meeting.VotingSettings != null ? MapVotingSettingsDto(meeting.VotingSettings) : null;
 
@@ -51,6 +57,27 @@ public class MeetingService
             new List<AgendaItemDto>(),
             new List<ProposalDto>()
         );
+    }
+
+    public async Task<List<MeetingDto>> GetAllMeetingsAsync()
+    {
+        var meetings = await _meetingRepository.GetAllAsync();
+        return meetings.Select(m => new MeetingDto(
+            m.Id,
+            m.CommunityId,
+            m.Community?.Name ?? "Comunidad",
+            m.Title,
+            m.Type,
+            m.Location,
+            m.ScheduledAt,
+            m.SecondCallAt,
+            m.VotingStart,
+            m.VotingEnd,
+            m.IsTransparent,
+            m.VotingSettings != null ? MapVotingSettingsDto(m.VotingSettings) : null,
+            new List<AgendaItemDto>(),
+            new List<ProposalDto>()
+        )).ToList();
     }
 
     public async Task<List<MeetingDto>> GetMeetingsByCommunityAsync(Guid communityId)
@@ -131,6 +158,7 @@ public class MeetingService
 
         decimal quorumPct = meeting.VotingSettings?.QuorumPercentage ?? 50.0m;
         bool quorumEnabled = meeting.VotingSettings?.QuorumEnabled ?? true;
+        bool requireQuorum = meeting.VotingSettings?.RequireQuorumForVoting ?? true;
         int quorumReq = quorumEnabled ? (int)Math.Ceiling(totalEligible * (quorumPct / 100.0m)) : 0;
         bool quorumReached = !quorumEnabled || presentCount >= quorumReq;
 
@@ -143,6 +171,7 @@ public class MeetingService
             presentCount,
             quorumReq,
             quorumReached,
+            requireQuorum,
             eligibleVoters
         );
     }

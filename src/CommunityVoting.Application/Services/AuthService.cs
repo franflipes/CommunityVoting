@@ -5,7 +5,7 @@ using CommunityVoting.Domain.Enums;
 
 namespace CommunityVoting.Application.Services;
 
-public class AuthService
+public class AuthService : IAuthService
 {
     private readonly IUserRepository _userRepository;
     private readonly IPasswordHasher _passwordHasher;
@@ -60,5 +60,28 @@ public class AuthService
         var user = await _userRepository.GetByIdAsync(userId);
         if (user == null) return null;
         return new UserDto(user.Id, user.Name, user.LastName, user.Email, user.PhoneNumber, user.Role);
+    }
+
+    public async Task<bool> ResetPasswordAsync(ResetPasswordRequest request)
+    {
+        var user = await _userRepository.GetByEmailAsync(request.Email);
+        if (user == null) return false;
+
+        user.PasswordHash = _passwordHasher.HashPassword(request.NewPassword);
+        await _userRepository.UpdateAsync(user);
+        return true;
+    }
+
+    public async Task<bool> ChangePasswordAsync(Guid userId, ChangePasswordRequest request)
+    {
+        var user = await _userRepository.GetByIdAsync(userId);
+        if (user == null || !_passwordHasher.VerifyPassword(request.OldPassword, user.PasswordHash))
+        {
+            return false;
+        }
+
+        user.PasswordHash = _passwordHasher.HashPassword(request.NewPassword);
+        await _userRepository.UpdateAsync(user);
+        return true;
     }
 }

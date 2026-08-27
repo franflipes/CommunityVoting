@@ -20,6 +20,8 @@ public class CommunityVotingDbContext : DbContext
     public DbSet<VotingSettings> VotingSettings => Set<VotingSettings>();
     public DbSet<MeetingParticipant> MeetingParticipants => Set<MeetingParticipant>();
     public DbSet<CommunityInvitation> CommunityInvitations => Set<CommunityInvitation>();
+    public DbSet<MeetingVoterAccess> MeetingVoterAccesses => Set<MeetingVoterAccess>();
+    public DbSet<EmailOutboxMessage> EmailOutboxMessages => Set<EmailOutboxMessage>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -145,5 +147,70 @@ public class CommunityVotingDbContext : DbContext
         modelBuilder.Entity<CommunityInvitation>()
             .HasIndex(ci => ci.Token)
             .IsUnique();
+
+        // Database Performance Indexes
+        modelBuilder.Entity<User>()
+            .HasIndex(u => u.Email)
+            .IsUnique();
+
+        modelBuilder.Entity<Meeting>()
+            .HasIndex(m => new { m.CommunityId, m.ScheduledAt });
+
+        modelBuilder.Entity<CommunityMember>()
+            .HasIndex(cm => new { cm.UserId, cm.IsActive });
+
+        modelBuilder.Entity<CommunityMember>()
+            .HasIndex(cm => new { cm.CommunityId, cm.IsActive });
+
+        modelBuilder.Entity<Proposal>()
+            .HasIndex(p => p.MeetingId);
+
+        modelBuilder.Entity<Proposal>()
+            .HasIndex(p => p.AgendaItemId);
+
+        modelBuilder.Entity<Document>()
+            .HasIndex(d => d.ProposalId);
+
+        modelBuilder.Entity<CommunityInvitation>()
+            .HasIndex(ci => new { ci.CommunityId, ci.IsActive });
+
+        // MeetingVoterAccess configuration
+        modelBuilder.Entity<MeetingVoterAccess>()
+            .HasOne(mva => mva.Meeting)
+            .WithMany(m => m.VoterAccesses)
+            .HasForeignKey(mva => mva.MeetingId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<MeetingVoterAccess>()
+            .HasOne(mva => mva.User)
+            .WithMany()
+            .HasForeignKey(mva => mva.UserId)
+            .OnDelete(DeleteBehavior.Restrict);
+
+        modelBuilder.Entity<MeetingVoterAccess>()
+            .HasIndex(mva => new { mva.MeetingId, mva.UserId })
+            .IsUnique();
+
+        modelBuilder.Entity<MeetingVoterAccess>()
+            .HasIndex(mva => mva.TokenHash);
+
+        // EmailOutboxMessage configuration
+        modelBuilder.Entity<EmailOutboxMessage>()
+            .HasOne(e => e.Meeting)
+            .WithMany()
+            .HasForeignKey(e => e.MeetingId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        modelBuilder.Entity<EmailOutboxMessage>()
+            .HasOne(e => e.User)
+            .WithMany()
+            .HasForeignKey(e => e.UserId)
+            .OnDelete(DeleteBehavior.SetNull);
+
+        modelBuilder.Entity<EmailOutboxMessage>()
+            .HasIndex(e => new { e.Status, e.NextAttemptAt });
+
+        modelBuilder.Entity<EmailOutboxMessage>()
+            .HasIndex(e => e.MeetingId);
     }
 }

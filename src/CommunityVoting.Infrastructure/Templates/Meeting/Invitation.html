@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Invitación a Reunión</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f6f8; margin: 0; padding: 20px; color: #333; }
+        .container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .header { background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: #ffffff; padding: 30px 20px; text-align: center; }
+        .header h1 { margin: 0; font-size: 24px; }
+        .header p { margin: 5px 0 0 0; opacity: 0.9; font-size: 14px; }
+        .content { padding: 30px 20px; }
+        .meeting-box { background: #f8fafc; border-left: 4px solid #2a5298; padding: 15px; border-radius: 4px; margin: 20px 0; }
+        .btn-container { text-align: center; margin: 30px 0; }
+        .btn { display: inline-block; background-color: #2a5298; color: #ffffff; text-decoration: none; padding: 12px 28px; border-radius: 6px; font-weight: bold; font-size: 16px; }
+        .code-box { background: #eef2ff; border: 1px dashed #6366f1; border-radius: 6px; text-align: center; padding: 15px; margin: 20px 0; }
+        .code { font-size: 28px; font-weight: bold; letter-spacing: 4px; color: #3730a3; margin: 5px 0; }
+        .footer { background: #f1f5f9; padding: 15px; text-align: center; font-size: 12px; color: #64748b; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>{{CommunityName}}</h1>
+            <p>Convocatoria a Reunión</p>
+        </div>
+        <div class="content">
+            <p>Hola <strong>{{FirstName}}</strong>,</p>
+            <p>Tienes una nueva reunión programada en tu comunidad:</p>
+
+            <div class="meeting-box">
+                <h3 style="margin-top: 0; color: #1e293b;">{{MeetingTitle}}</h3>
+                <p style="margin: 5px 0;">📅 <strong>Fecha:</strong> {{MeetingDate}}</p>
+                <p style="margin: 5px 0;">🕐 <strong>Hora:</strong> {{MeetingTime}}</p>
+            </div>
+
+            <div class="btn-container">
+                <a href="{{AccessUrl}}" class="btn">ACCEDER A LA REUNIÓN</a>
+            </div>
+
+            <div class="code-box">
+                <div style="font-size: 13px; color: #475569;">Tu Código de Acceso Individual:</div>
+                <div class="code">{{AccessCode}}</div>
+                <div style="font-size: 11px; color: #64748b; margin-top: 4px;">Este código es confidencial y está asociado exclusivamente a tu usuario.</div>
+            </div>
+
+            <p style="font-size: 13px; color: #64748b;">Si no esperabas este correo o no perteneces a esta comunidad, puedes ignorarlo.</p>
+        </div>
+        <div class="footer">
+            &copy; CommunityVoting — Plataforma de Gestión y Votación Comunitaria
+        </div>
+    </div>
+</body>
+</html>

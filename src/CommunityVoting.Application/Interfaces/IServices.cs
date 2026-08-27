@@ -4,7 +4,7 @@ namespace CommunityVoting.Application.Interfaces;
 
 public interface IJwtProvider
 {
-    string Generate(User user);
+    string Generate(User user, string? authMethod = null);
 }
 
 public interface IPasswordHasher

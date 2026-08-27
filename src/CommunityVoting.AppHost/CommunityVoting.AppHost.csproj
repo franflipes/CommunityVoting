@@ -14,10 +14,13 @@
   <ItemGroup>
     <PackageReference Include="Aspire.Hosting.AppHost" Version="9.0.0" />
     <PackageReference Include="Aspire.Hosting.PostgreSQL" Version="9.0.0" />
+    <PackageReference Include="Aspire.Hosting.NodeJs" Version="9.0.0" />
+    <PackageReference Include="Aspire.Hosting.Azure.Storage" Version="9.0.0" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\CommunityVoting.API\CommunityVoting.API.csproj" />
     <ProjectReference Include="..\CommunityVoting.Voting.Api\CommunityVoting.Voting.Api.csproj" />
+    <ProjectReference Include="..\CommunityVoting.Document.Api\CommunityVoting.Document.Api.csproj" />
   </ItemGroup>
 </Project>

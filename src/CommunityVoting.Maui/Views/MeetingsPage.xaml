@@ -1,0 +1,140 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:models="clr-namespace:CommunityVoting.Maui.Models"
+             xmlns:viewmodels="clr-namespace:CommunityVoting.Maui.ViewModels"
+             x:Class="CommunityVoting.Maui.Views.MeetingsPage"
+             Title="Mis Juntas"
+             BackgroundColor="#F8FAFC">
+
+    <Grid RowDefinitions="Auto,*">
+
+        <!-- Top Header Card -->
+        <Border Grid.Row="0" BackgroundColor="#FFFFFF" Padding="20" Stroke="#E2E8F0" StrokeThickness="0,0,0,1">
+            <Grid ColumnDefinitions="*,Auto">
+                <VerticalStackLayout Grid.Column="0" Spacing="2">
+                    <Label Text="Bienvenido/a," TextColor="#64748B" FontSize="13"/>
+                    <Label Text="{Binding UserName}" TextColor="#0F172A" FontSize="20" FontAttributes="Bold"/>
+                </VerticalStackLayout>
+                
+                <HorizontalStackLayout Grid.Column="1" Spacing="8">
+                    <Button Text="🔑 Contraseña" 
+                            Command="{Binding ToggleChangePasswordModalCommand}" 
+                            BackgroundColor="#EEF2FF" 
+                            TextColor="#4F46E5" 
+                            BorderColor="#C7D2FE"
+                            BorderWidth="1"
+                            HeightRequest="36"
+                            CornerRadius="8"
+                            Padding="12,0"/>
+
+                    <Button Text="Salir" 
+                            Command="{Binding LogoutCommand}" 
+                            BackgroundColor="#F1F5F9" 
+                            TextColor="#475569" 
+                            BorderColor="#CBD5E1"
+                            BorderWidth="1"
+                            HeightRequest="36"
+                            CornerRadius="8"
+                            Padding="12,0"/>
+                </HorizontalStackLayout>
+            </Grid>
+        </Border>
+
+        <!-- Meetings List -->
+        <RefreshView Grid.Row="1" IsRefreshing="{Binding IsBusy}" Command="{Binding LoadMeetingsCommand}" RefreshColor="#4F46E5">
+            <CollectionView ItemsSource="{Binding Meetings}" SelectionMode="None" Margin="16">
+                <CollectionView.EmptyView>
+                    <VerticalStackLayout VerticalOptions="Center" HorizontalOptions="Center" Spacing="12">
+                        <Border WidthRequest="60" HeightRequest="60" BackgroundColor="#EEF2FF" StrokeThickness="0" HorizontalOptions="Center">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="30"/>
+                            </Border.StrokeShape>
+                            <Label Text="📅" FontSize="28" HorizontalOptions="Center" VerticalOptions="Center"/>
+                        </Border>
+                        <Label Text="No hay juntas programadas." TextColor="#64748B" FontSize="16" FontAttributes="Bold" HorizontalOptions="Center"/>
+                        <Button Text="Recargar Listado" Command="{Binding LoadMeetingsCommand}" BackgroundColor="#4F46E5" TextColor="White" CornerRadius="8"/>
+                    </VerticalStackLayout>
+                </CollectionView.EmptyView>
+
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:MeetingItem">
+                        <Border Margin="0,0,0,14" Padding="18" BackgroundColor="#FFFFFF" Stroke="#E2E8F0" StrokeThickness="1">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="12"/>
+                            </Border.StrokeShape>
+
+                            <Grid RowDefinitions="Auto,Auto,Auto" ColumnDefinitions="*,Auto" RowSpacing="8">
+                                <Label Grid.Row="0" Grid.Column="0" Text="{Binding Title}" TextColor="#0F172A" FontSize="17" FontAttributes="Bold"/>
+                                
+                                <Border Grid.Row="0" Grid.Column="1" BackgroundColor="#EEF2FF" Stroke="#C7D2FE" Padding="8,4" StrokeThickness="1">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="6"/>
+                                    </Border.StrokeShape>
+                                    <Label Text="{Binding TypeDisplay}" TextColor="#4F46E5" FontSize="11" FontAttributes="Bold"/>
+                                </Border>
+
+                                <Label Grid.Row="1" Grid.Column="0" Text="{Binding Location}" TextColor="#64748B" FontSize="13"/>
+                                <Label Grid.Row="1" Grid.Column="1" Text="{Binding ScheduledAt, StringFormat='{0:dd/MM/yyyy HH:mm}'}" TextColor="#475569" FontSize="12" FontAttributes="Bold"/>
+
+                                <Button Grid.Row="2" Grid.ColumnSpan="2" 
+                                        Text="Entrar a la Sala de Votación" 
+                                        Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:MeetingsViewModel}}, Path=SelectMeetingCommand}"
+                                        CommandParameter="{Binding .}"
+                                        BackgroundColor="#4F46E5" 
+                                        TextColor="White" 
+                                        FontAttributes="Bold"
+                                        Margin="0,10,0,0"
+                                        HeightRequest="44"
+                                        CornerRadius="8"/>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </RefreshView>
+
+        <!-- CHANGE PASSWORD MODAL OVERLAY -->
+        <Grid Grid.RowSpan="2" IsVisible="{Binding IsChangePasswordModalVisible}" BackgroundColor="#800F172A" Padding="20">
+            <Border VerticalOptions="Center" HorizontalOptions="Center" WidthRequest="340" BackgroundColor="#FFFFFF" Stroke="#E2E8F0" StrokeThickness="1" Padding="24">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="16"/>
+                </Border.StrokeShape>
+
+                <VerticalStackLayout Spacing="16">
+                    <Label Text="Cambiar Mi Contraseña" FontSize="18" FontAttributes="Bold" TextColor="#0F172A" HorizontalOptions="Center"/>
+
+                    <VerticalStackLayout Spacing="6">
+                        <Label Text="Contraseña Actual" TextColor="#334155" FontSize="12" FontAttributes="Bold"/>
+                        <Border Stroke="#CBD5E1" StrokeThickness="1" BackgroundColor="#F8FAFC" Padding="4,0">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="8"/>
+                            </Border.StrokeShape>
+                            <Entry Text="{Binding OldPassword}" IsPassword="True" Placeholder="••••••••" PlaceholderColor="#94A3B8" TextColor="#0F172A" BackgroundColor="Transparent"/>
+                        </Border>
+                    </VerticalStackLayout>
+
+                    <VerticalStackLayout Spacing="6">
+                        <Label Text="Nueva Contraseña" TextColor="#334155" FontSize="12" FontAttributes="Bold"/>
+                        <Border Stroke="#CBD5E1" StrokeThickness="1" BackgroundColor="#F8FAFC" Padding="4,0">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="8"/>
+                            </Border.StrokeShape>
+                            <Entry Text="{Binding NewPassword}" IsPassword="True" Placeholder="Mínimo 6 caracteres" PlaceholderColor="#94A3B8" TextColor="#0F172A" BackgroundColor="Transparent"/>
+                        </Border>
+                    </VerticalStackLayout>
+
+                    <Label Text="{Binding PasswordError}" TextColor="#EF4444" FontSize="13" IsVisible="{Binding PasswordError, Converter={StaticResource StringNotNullOrEmptyConverter}}" HorizontalOptions="Center"/>
+                    <Label Text="{Binding PasswordSuccess}" TextColor="#10B981" FontSize="13" IsVisible="{Binding PasswordSuccess, Converter={StaticResource StringNotNullOrEmptyConverter}}" HorizontalOptions="Center"/>
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="10" Margin="0,8,0,0">
+                        <Button Grid.Column="0" Text="Cancelar" Command="{Binding ToggleChangePasswordModalCommand}" BackgroundColor="#F1F5F9" TextColor="#475569" CornerRadius="8"/>
+                        <Button Grid.Column="1" Text="Guardar" Command="{Binding ChangePasswordCommand}" BackgroundColor="#4F46E5" TextColor="White" FontAttributes="Bold" CornerRadius="8"/>
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+        </Grid>
+
+    </Grid>
+
+</ContentPage>

@@ -73,7 +73,7 @@ export const CommunitiesPage: React.FC = () => {
               <div>
                 <div style={{ display: 'flex', gap: '16px', fontSize: '0.82rem', color: 'var(--text-secondary)', padding: '12px 0', borderTop: '1px solid var(--border-glass)', marginBottom: '16px' }}>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <Users size={14} color="var(--accent)" /> {c.memberCount ?? 0} Miembros
+                    <Users size={14} color="var(--accent)" /> {c.membersCount ?? c.memberCount ?? 0} Miembros
                   </span>
                 </div>
 

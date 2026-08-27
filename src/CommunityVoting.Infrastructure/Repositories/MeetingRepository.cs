@@ -45,6 +45,15 @@ public class MeetingRepository : IMeetingRepository
             .FirstOrDefaultAsync(m => m.Id == id);
     }
 
+    public async Task<List<Meeting>> GetAllAsync()
+    {
+        return await _context.Meetings
+            .Include(m => m.Community)
+            .Include(m => m.VotingSettings)
+            .OrderByDescending(m => m.ScheduledAt)
+            .ToListAsync();
+    }
+
     public async Task<List<Meeting>> GetByCommunityIdAsync(Guid communityId)
     {
         return await _context.Meetings

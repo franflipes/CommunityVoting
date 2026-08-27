@@ -65,7 +65,8 @@ export interface Community {
   cif?: string;
   createdByUserId: string;
   createdByName?: string;
-  memberCount: number;
+  membersCount?: number;
+  memberCount?: number;
   votingSettings?: VotingSettings;
 }
 
@@ -241,4 +242,27 @@ export interface VerifyInvitationResponse {
   communityId?: string;
   communityName?: string;
   errorMessage?: string;
+}
+
+export interface MeetingVoterAccessDto {
+  id: string;
+  meetingId: string;
+  userId: string;
+  userName: string;
+  userEmail: string;
+  token?: string;
+  code?: string;
+  accessUrl: string;
+  createdAt: string;
+  expiresAt?: string;
+  isRevoked: boolean;
+  lastUsedAt?: string;
+  failedAttempts: number;
+}
+
+export interface MeetingAccessAuthResponse {
+  accessToken: string;
+  expiresIn: number;
+  redirectUrl: string;
+  user: User;
 }

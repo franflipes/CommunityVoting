@@ -84,10 +84,16 @@ public static class VotingEndpoints
                 var data = await response.Content.ReadFromJsonAsync<EligibleDataResponse>();
                 if (data == null) return Results.BadRequest("Respuesta vacía del servidor API.");
 
+                if (DateTime.UtcNow < data.ScheduledAt)
+                {
+                    return Results.BadRequest($"No se puede iniciar la votación antes de la fecha y hora de celebración de la reunión ({data.ScheduledAt.ToLocalTime():yyyy-MM-dd HH:mm}).");
+                }
+
                 session.EligibleMembers = data.EligibleMembers;
                 session.PresentMembers = data.PresentMembers;
                 session.QuorumRequired = data.QuorumRequired;
                 session.QuorumReached = data.QuorumReached;
+                session.RequireQuorumForVoting = data.RequireQuorumForVoting;
 
                 session.Ballots.Clear();
                 foreach (var voter in data.Voters)
@@ -123,14 +129,59 @@ public static class VotingEndpoints
         }).RequireAuthorization();
 
         // 3. Open session (Admin)
-        group.MapPost("/sessions/{id}/open", async (Guid id, IVotingRepository repository, IHubContext<VotingHub> hubContext) =>
+        group.MapPost("/sessions/{id}/open", async (Guid id, IVotingRepository repository, IHttpClientFactory httpClientFactory, IHubContext<VotingHub> hubContext, HttpContext httpContext) =>
         {
             var session = await repository.GetSessionAsync(id) ?? await repository.GetSessionByProposalIdAsync(id);
             if (session == null) return Results.NotFound("Sesión de votación no encontrada.");
 
+            // Re-fetch fresh quorum and attendance data before opening
+            try
+            {
+                var client = httpClientFactory.CreateClient("CommunityVotingApi");
+                if (httpContext.Request.Headers.TryGetValue("Authorization", out var authHeader))
+                {
+                    client.DefaultRequestHeaders.TryAddWithoutValidation("Authorization", authHeader.ToString());
+                }
+
+                var response = await client.GetAsync($"/api/meetings/{session.MeetingId}/voting-eligible-data");
+                if (response.IsSuccessStatusCode)
+                {
+                    var data = await response.Content.ReadFromJsonAsync<EligibleDataResponse>();
+                    if (data != null)
+                    {
+                        session.EligibleMembers = data.EligibleMembers;
+                        session.PresentMembers = data.PresentMembers;
+                        session.QuorumRequired = data.QuorumRequired;
+                        session.QuorumReached = data.QuorumReached;
+                        session.RequireQuorumForVoting = data.RequireQuorumForVoting;
+
+                        // Ensure any newly added voters get a ballot
+                        foreach (var voter in data.Voters)
+                        {
+                            if (!session.Ballots.Any(b => b.UserId == voter.UserId))
+                            {
+                                session.Ballots.Add(new Ballot
+                                {
+                                    Id = Guid.NewGuid(),
+                                    UserId = voter.UserId,
+                                    Name = voter.Name,
+                                    LastName = voter.LastName,
+                                    Email = voter.Email,
+                                    Status = BallotStatus.Pending
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+            catch
+            {
+                // Fallback to existing session data if API service is temporarily unreachable
+            }
+
             if (session.RequireQuorumForVoting && !session.QuorumReached)
             {
-                return Results.BadRequest($"No se puede iniciar la votación porque no se ha alcanzado el quórum mínimo requerido. Asistentes presentes: {session.PresentMembers}/{session.EligibleMembers} (Mínimo requerido: {session.QuorumRequired}).");
+                return Results.BadRequest($"No se puede iniciar la votación porque no se ha alcanzado el quórum mínimo requerido en la reunión. Asistentes presentes: {session.PresentMembers}/{session.EligibleMembers} (Mínimo requerido: {session.QuorumRequired}).");
             }
 
             session.State = VotingState.Open;
@@ -378,6 +429,7 @@ public class EligibleDataResponse
     public int PresentMembers { get; set; }
     public int QuorumRequired { get; set; }
     public bool QuorumReached { get; set; }
+    public bool RequireQuorumForVoting { get; set; }
     public List<EligibleVoterDto> Voters { get; set; } = new();
 }
 

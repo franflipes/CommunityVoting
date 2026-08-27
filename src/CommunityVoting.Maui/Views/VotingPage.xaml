@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:models="clr-namespace:CommunityVoting.Maui.Models"
+             xmlns:viewmodels="clr-namespace:CommunityVoting.Maui.ViewModels"
+             x:Class="CommunityVoting.Maui.Views.VotingPage"
+             Title="Sala de Votación En Vivo"
+             BackgroundColor="#F8FAFC">
+
+    <ScrollView Padding="18">
+        <VerticalStackLayout Spacing="18">
+
+            <!-- Title & Live Banner -->
+            <Border BackgroundColor="#ECFDF5" Stroke="#A7F3D0" StrokeThickness="1" Padding="16">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="12"/>
+                </Border.StrokeShape>
+
+                <VerticalStackLayout Spacing="6">
+                    <HorizontalStackLayout Spacing="8">
+                        <BoxView Color="#10B981" WidthRequest="10" HeightRequest="10" VerticalOptions="Center" CornerRadius="5"/>
+                        <Label Text="SALA EN DIRECTO (SIGNALR)" TextColor="#059669" FontSize="11" FontAttributes="Bold" VerticalOptions="Center"/>
+                    </HorizontalStackLayout>
+                    <Label Text="{Binding MeetingTitle}" TextColor="#0F172A" FontSize="20" FontAttributes="Bold"/>
+                    <Label Text="{Binding StatusMessage}" TextColor="#0284C7" FontSize="13" FontAttributes="Bold"/>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Proposal Selection Picker -->
+            <VerticalStackLayout Spacing="6">
+                <Label Text="Selecciona Propuesta a Votar" TextColor="#475569" FontSize="12" FontAttributes="Bold"/>
+                <Border Stroke="#CBD5E1" StrokeThickness="1" BackgroundColor="#FFFFFF" Padding="4,0">
+                    <Border.StrokeShape>
+                        <RoundRectangle CornerRadius="8"/>
+                    </Border.StrokeShape>
+                    <Picker ItemsSource="{Binding Proposals}" 
+                            SelectedItem="{Binding SelectedProposal}" 
+                            ItemDisplayBinding="{Binding Title}"
+                            Title="-- Elige una propuesta --"
+                            TextColor="#0F172A"
+                            TitleColor="#94A3B8"
+                            BackgroundColor="Transparent"/>
+                </Border>
+            </VerticalStackLayout>
+
+            <!-- Proposal Description -->
+            <Border IsVisible="{Binding SelectedProposal, Converter={StaticResource NotNullConverter}}" 
+                    BackgroundColor="#FFFFFF" 
+                    Stroke="#E2E8F0" 
+                    Padding="16">
+                <Border.StrokeShape>
+                    <RoundRectangle CornerRadius="12"/>
+                </Border.StrokeShape>
+
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="{Binding SelectedProposal.Title}" TextColor="#0F172A" FontSize="16" FontAttributes="Bold"/>
+                    <Label Text="{Binding SelectedProposal.Description}" TextColor="#64748B" FontSize="13"/>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Options Selection -->
+            <Label Text="Opciones de Voto Disponibles" TextColor="#475569" FontSize="12" FontAttributes="Bold"/>
+            
+            <CollectionView ItemsSource="{Binding SelectedProposal.Options}" SelectionMode="Single" SelectedItem="{Binding SelectedOption}">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate x:DataType="models:ProposalOptionDto">
+                        <Border Margin="0,0,0,10" 
+                                Padding="16" 
+                                BackgroundColor="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:VotingViewModel}}, Path=SelectedOption, Converter={StaticResource SelectedToBgColorConverter}, ConverterParameter={Binding .}}" 
+                                Stroke="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:VotingViewModel}}, Path=SelectedOption, Converter={StaticResource SelectedToBorderColorConverter}, ConverterParameter={Binding .}}" 
+                                StrokeThickness="2">
+                            <Border.StrokeShape>
+                                <RoundRectangle CornerRadius="10"/>
+                            </Border.StrokeShape>
+                            
+                            <Border.GestureRecognizers>
+                                <TapGestureRecognizer Command="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:VotingViewModel}}, Path=SelectOptionCommand}"
+                                                      CommandParameter="{Binding .}"/>
+                            </Border.GestureRecognizers>
+
+                            <Grid ColumnDefinitions="*,Auto">
+                                <Label Grid.Column="0" Text="{Binding Label}" TextColor="#0F172A" FontSize="15" FontAttributes="Bold" VerticalOptions="Center"/>
+                                
+                                <Border Grid.Column="1" 
+                                        BackgroundColor="#10B981" 
+                                        Padding="10,4" 
+                                        StrokeThickness="0"
+                                        IsVisible="{Binding Source={RelativeSource AncestorType={x:Type viewmodels:VotingViewModel}}, Path=SelectedOption, Converter={StaticResource EqualityConverter}, ConverterParameter={Binding .}}">
+                                    <Border.StrokeShape>
+                                        <RoundRectangle CornerRadius="6"/>
+                                    </Border.StrokeShape>
+                                    <Label Text="✓ Seleccionado" TextColor="White" FontSize="11" FontAttributes="Bold"/>
+                                </Border>
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <!-- Vote Action Button -->
+            <Button Text="Emitir Mi Voto En Tiempo Real" 
+                    Command="{Binding SubmitVoteCommand}" 
+                    IsEnabled="{Binding IsBusy, Converter={StaticResource InverseBoolConverter}}"
+                    BackgroundColor="#10B981" 
+                    TextColor="White" 
+                    FontAttributes="Bold"
+                    HeightRequest="50"
+                    CornerRadius="10"
+                    Margin="0,10,0,0"/>
+
+            <ActivityIndicator IsRunning="{Binding IsBusy}" IsVisible="{Binding IsBusy}" Color="#10B981" HorizontalOptions="Center"/>
+
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>

@@ -1,6 +1,7 @@
 using System.Text;
 using CommunityVoting.API.Endpoints;
 using CommunityVoting.Application.Interfaces;
+using CommunityVoting.Application.Services;
 using CommunityVoting.Domain.Entities;
 using CommunityVoting.Domain.Enums;
 using CommunityVoting.Infrastructure;
@@ -9,10 +10,20 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 
+using OpenTelemetry;
+using OpenTelemetry.Trace;
+using CommunityVoting.Application;
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Add Infrastructure & Application Services
-builder.Services.AddInfrastructureServices(builder.Configuration);
+builder.AddServiceDefaults();
+
+// Add Infrastructure Services (Database, Repositories, Email Infrastructure, Auth Infrastructure, Background Workers)
+builder.Services.AddDatabaseInfrastructure(builder.Configuration);
+builder.Services.AddMainInfrastructure(builder.Configuration);
+
+// Add Application Services (AuthService, CommunityService, MeetingService, AgendaItemService, ProposalService, InvitationService, MeetingAccessService)
+builder.Services.AddMainApplicationServices();
 
 // Add CORS
 builder.Services.AddCors(options =>
@@ -50,6 +61,8 @@ builder.Services.AddEndpointsApiExplorer();
 
 var app = builder.Build();
 
+app.MapDefaultEndpoints();
+
 app.UseCors("AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
@@ -58,18 +71,20 @@ app.UseAuthorization();
 app.MapAuthEndpoints();
 app.MapCommunityEndpoints();
 app.MapMeetingEndpoints();
+app.MapMeetingAccessEndpoints();
 app.MapAgendaItemEndpoints();
 app.MapProposalEndpoints();
-app.MapDocumentEndpoints();
 app.MapInvitationEndpoints();
 
-// Seed initial demo data in SQLite DB
+// Seed initial demo data in PostgreSQL DB
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<CommunityVotingDbContext>();
-    context.Database.EnsureCreated();
-
     var hasher = scope.ServiceProvider.GetRequiredService<IPasswordHasher>();
+    var logger = scope.ServiceProvider.GetService<ILogger<Program>>();
+
+    await context.WaitForDatabaseAsync(logger);
+    await context.Database.EnsureCreatedAsync();
 
     if (!context.Users.Any())
     {
@@ -94,6 +109,9 @@ using (var scope = app.Services.CreateScope())
         var meeting = Meeting.Create(community.Id, "Junta General Ordinaria 2026", MeetingType.Ordinary, "Sala de Comunidad / Online", DateTime.UtcNow.AddDays(7));
         context.Meetings.Add(meeting);
         context.SaveChanges();
+
+        var meetingAccessService = scope.ServiceProvider.GetRequiredService<IMeetingAccessService>();
+        await meetingAccessService.CreateAccessForEligibleMembersAsync(meeting.Id, "http://localhost:5173");
 
         // Seed Agenda Items
         var agendaItem1 = AgendaItem.Create(meeting.Id, "Punto 1: Cuentas y Balances Anuales", "Revisión de los estados financieros del ejercicio 2025", 1);

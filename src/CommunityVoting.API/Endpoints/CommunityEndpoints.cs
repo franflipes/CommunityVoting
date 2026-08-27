@@ -1,6 +1,6 @@
 using System.Security.Claims;
 using CommunityVoting.Application.DTOs;
-using CommunityVoting.Application.Services;
+using CommunityVoting.Application.Interfaces;
 using CommunityVoting.Domain.Enums;
 
 namespace CommunityVoting.API.Endpoints;
@@ -11,7 +11,7 @@ public static class CommunityEndpoints
     {
         var group = app.MapGroup("/api/communities").RequireAuthorization();
 
-        group.MapPost("/", async (CreateCommunityRequest request, HttpContext httpContext, CommunityService communityService) =>
+        group.MapPost("/", async (CreateCommunityRequest request, HttpContext httpContext, ICommunityService communityService) =>
         {
             var userIdStr = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId)) return Results.Unauthorized();
@@ -20,7 +20,7 @@ public static class CommunityEndpoints
             return Results.Created($"/api/communities/{community.Id}", community);
         });
 
-        group.MapGet("/", async (HttpContext httpContext, CommunityService communityService) =>
+        group.MapGet("/", async (HttpContext httpContext, ICommunityService communityService) =>
         {
             var userIdStr = httpContext.User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userIdStr) || !Guid.TryParse(userIdStr, out var userId)) return Results.Unauthorized();
@@ -32,41 +32,41 @@ public static class CommunityEndpoints
             return Results.Ok(communities);
         });
 
-        group.MapGet("/{id}", async (Guid id, CommunityService communityService) =>
+        group.MapGet("/{id}", async (Guid id, ICommunityService communityService) =>
         {
             var community = await communityService.GetCommunityByIdAsync(id);
             if (community == null) return Results.NotFound();
             return Results.Ok(community);
         });
 
-        group.MapPost("/{id}/members", async (Guid id, AddCommunityMemberRequest request, CommunityService communityService) =>
+        group.MapPost("/{id}/members", async (Guid id, AddCommunityMemberRequest request, ICommunityService communityService) =>
         {
             var member = await communityService.AddMemberAsync(id, request);
             if (member == null) return Results.BadRequest("Comunidad o usuario no encontrado.");
             return Results.Ok(member);
         });
 
-        group.MapGet("/{id}/members", async (Guid id, CommunityService communityService) =>
+        group.MapGet("/{id}/members", async (Guid id, ICommunityService communityService) =>
         {
             var members = await communityService.GetMembersAsync(id);
             return Results.Ok(members);
         });
 
-        group.MapGet("/{id}/voting-settings", async (Guid id, CommunityService communityService) =>
+        group.MapGet("/{id}/voting-settings", async (Guid id, ICommunityService communityService) =>
         {
             var settings = await communityService.GetVotingSettingsAsync(id);
             if (settings == null) return Results.NotFound("Comunidad no encontrada.");
             return Results.Ok(settings);
         });
 
-        group.MapPut("/{id}/voting-settings", async (Guid id, UpdateVotingSettingsRequest request, CommunityService communityService) =>
+        group.MapPut("/{id}/voting-settings", async (Guid id, UpdateVotingSettingsRequest request, ICommunityService communityService) =>
         {
             var updated = await communityService.UpdateVotingSettingsAsync(id, request);
             if (updated == null) return Results.NotFound("Comunidad no encontrada.");
             return Results.Ok(updated);
         });
 
-        group.MapPut("/{id}/members/{memberId}/voting-rights", async (Guid id, Guid memberId, UpdateMemberVotingRightsRequest request, CommunityService communityService) =>
+        group.MapPut("/{id}/members/{memberId}/voting-rights", async (Guid id, Guid memberId, UpdateMemberVotingRightsRequest request, ICommunityService communityService) =>
         {
             var updated = await communityService.UpdateMemberVotingRightsAsync(id, memberId, request);
             if (updated == null) return Results.NotFound("Miembro no encontrado.");

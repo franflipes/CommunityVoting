@@ -1,8 +1,8 @@
 using System.Security.Claims;
-using CommunityVoting.Application.Services;
+using CommunityVoting.Application.Interfaces;
 using Microsoft.AspNetCore.Http;
 
-namespace CommunityVoting.API.Endpoints;
+namespace CommunityVoting.Document.Api.Endpoints;
 
 public static class DocumentEndpoints
 {
@@ -13,7 +13,7 @@ public static class DocumentEndpoints
         group.MapPost("/proposal/{proposalId}", async (
             Guid proposalId,
             HttpContext httpContext,
-            DocumentService documentService) =>
+            IDocumentService documentService) =>
         {
             if (!httpContext.Request.HasFormContentType)
             {
@@ -46,13 +46,13 @@ public static class DocumentEndpoints
             return Results.Created($"/api/documents/{doc.Id}", doc);
         }).DisableAntiforgery();
 
-        group.MapGet("/proposal/{proposalId}", async (Guid proposalId, DocumentService documentService) =>
+        group.MapGet("/proposal/{proposalId}", async (Guid proposalId, IDocumentService documentService) =>
         {
             var docs = await documentService.GetDocumentsByProposalAsync(proposalId);
             return Results.Ok(docs);
         });
 
-        group.MapGet("/{id}/download", async (Guid id, DocumentService documentService) =>
+        group.MapGet("/{id}/download", async (Guid id, IDocumentService documentService) =>
         {
             var result = await documentService.DownloadDocumentAsync(id);
             if (result == null) return Results.NotFound();
@@ -60,7 +60,7 @@ public static class DocumentEndpoints
             return Results.File(result.Value.stream, result.Value.contentType, result.Value.fileName);
         });
 
-        group.MapDelete("/{id}", async (Guid id, DocumentService documentService) =>
+        group.MapDelete("/{id}", async (Guid id, IDocumentService documentService) =>
         {
             var success = await documentService.DeleteDocumentAsync(id);
             if (!success) return Results.NotFound();

@@ -21,6 +21,7 @@ public class Meeting
     public ICollection<MeetingParticipant> Participants { get; set; } = new List<MeetingParticipant>();
     public ICollection<AgendaItem> AgendaItems { get; set; } = new List<AgendaItem>();
     public ICollection<Proposal> Proposals { get; set; } = new List<Proposal>();
+    public ICollection<MeetingVoterAccess> VoterAccesses { get; set; } = new List<MeetingVoterAccess>();
 
     public Meeting() { }
 

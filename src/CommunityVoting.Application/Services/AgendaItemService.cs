@@ -4,7 +4,7 @@ using CommunityVoting.Domain.Entities;
 
 namespace CommunityVoting.Application.Services;
 
-public class AgendaItemService
+public class AgendaItemService : IAgendaItemService
 {
     private readonly IAgendaItemRepository _agendaItemRepository;
     private readonly IMeetingRepository _meetingRepository;

@@ -17,7 +17,7 @@ public class JwtProvider : IJwtProvider
         _configuration = configuration;
     }
 
-    public string Generate(User user)
+    public string Generate(User user, string? authMethod = null)
     {
         var secretKey = _configuration["Jwt:SecretKey"] ?? "SuperSecretKeyForCommunityVotingApp12345!";
         var issuer = _configuration["Jwt:Issuer"] ?? "CommunityVoting";
@@ -28,7 +28,8 @@ public class JwtProvider : IJwtProvider
             new(ClaimTypes.NameIdentifier, user.Id.ToString()),
             new(ClaimTypes.Email, user.Email),
             new(ClaimTypes.Name, $"{user.Name} {user.LastName}"),
-            new(ClaimTypes.Role, user.Role.ToString())
+            new(ClaimTypes.Role, user.Role.ToString()),
+            new("auth_method", authMethod ?? "password")
         };
 
         var key = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(secretKey));

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { apiClient } from '../api/client';
+import { documentApiClient } from '../api/client';
 import { Document } from '../types';
 import { X, Upload, FileText } from 'lucide-react';
 
@@ -56,7 +56,7 @@ export const UploadDocumentModal: React.FC<UploadDocumentModalProps> = ({
     }
 
     try {
-      await apiClient.post<Document>(`/documents/proposal/${proposalId}`, formData, {
+      await documentApiClient.post<Document>(`/documents/proposal/${proposalId}`, formData, {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
