@@ -30,3 +30,5 @@ yarn-error.log*
 *.sqlite
 *.log
 *.tmp
+uploads/
+scratch/
