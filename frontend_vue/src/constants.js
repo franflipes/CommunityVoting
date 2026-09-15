@@ -1,0 +1,6 @@
+export const UserRole = Object.freeze({ GlobalAdmin: 0, CommunityAdmin: 1, CommunityMember: 2 })
+export const MeetingType = Object.freeze({ Ordinary: 0, Extraordinary: 1 })
+export const VotingState = Object.freeze({ Created: 0, Prepared: 1, Open: 2, Closed: 3, Expired: 4 })
+export const QuorumType = Object.freeze({ PercentageOfEligibleMembers: 1 })
+export const MajorityType = Object.freeze({ SimpleMajority: 1, MajorityOfVotesCast: 2, QualifiedMajority: 3 })
+export const AbstentionPolicy = Object.freeze({ Excluded: 1, IncludedInDenominator: 2, IncludedAsAgainst: 3 })

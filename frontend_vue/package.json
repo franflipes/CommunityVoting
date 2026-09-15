@@ -1,0 +1,26 @@
+{
+  "name": "community-voting-vue",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@mdi/font": "^7.4.47",
+    "@microsoft/signalr": "^10.0.11",
+    "axios": "^1.16.1",
+    "vite": "^7.3.6",
+    "vue": "^3.5.35",
+    "vue-router": "^4.5.1",
+    "vuetify": "^3.12.7"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^6.0.7",
+    "eslint": "^9.39.4",
+    "eslint-plugin-vue": "^9.33.0"
+  }
+}
