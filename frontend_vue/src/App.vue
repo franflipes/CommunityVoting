@@ -8,6 +8,9 @@
       <v-spacer />
       <v-btn to="/communities" variant="text" prepend-icon="mdi-domain">Comunidades</v-btn>
       <v-btn v-if="authStore.isAdmin" to="/admin/settings" variant="text" prepend-icon="mdi-cog-outline">Administración</v-btn>
+      <v-chip v-if="authStore.user" class="d-none d-md-flex" size="small" color="primary" variant="tonal">
+        {{ authStore.user.name }} · {{ roleLabel }}
+      </v-chip>
       <TooltipButton :icon="themeIcon" tooltip="Cambiar tema" variant="text" @click="toggleTheme" />
       <TooltipButton icon="mdi-logout" tooltip="Cerrar sesión" variant="text" @click="logout" />
     </v-app-bar>
@@ -22,6 +25,10 @@
       </div>
     </v-main>
 
+    <v-footer v-if="showChrome" border="t" class="justify-center text-caption text-medium-emphasis">
+      © {{ currentYear }} CommunityVoting · Votaciones comunitarias transparentes y seguras
+    </v-footer>
+
     <ToastHost />
     <ConfirmDialogHost />
   </v-app>
@@ -33,6 +40,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { useTheme } from 'vuetify'
 import { authStore } from '@/stores/auth'
 import { services } from '@/services/api'
+import { UserRole } from '@/constants'
 import { saveTheme } from '@/theme'
 import ToastHost from '@/components/ToastHost.vue'
 import ConfirmDialogHost from '@/components/ConfirmDialogHost.vue'
@@ -43,6 +51,12 @@ const router = useRouter()
 const theme = useTheme()
 const showChrome = computed(() => authStore.isAuthenticated && !route.meta.public)
 const themeIcon = computed(() => theme.global.current.value.dark ? 'mdi-white-balance-sunny' : 'mdi-weather-night')
+const currentYear = new Date().getFullYear()
+const roleLabel = computed(() => {
+  if (authStore.user?.role === UserRole.GlobalAdmin) return 'Administrador global'
+  if (authStore.user?.role === UserRole.CommunityAdmin) return 'Administrador'
+  return 'Votante'
+})
 
 onMounted(async () => {
   if (authStore.token) {

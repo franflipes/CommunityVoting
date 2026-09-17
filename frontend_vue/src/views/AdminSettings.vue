@@ -11,6 +11,7 @@
     <v-alert v-if="message" type="success" variant="tonal" closable class="mb-4" @click:close="message = ''">{{ message }}</v-alert>
     <div v-if="loading" class="loading-page"><v-progress-circular indeterminate color="primary" /></div>
     <v-alert v-else-if="error" type="error" variant="tonal">{{ error }}</v-alert>
+    <v-alert v-else-if="!community" type="info" variant="tonal">No hay comunidades disponibles para configurar.</v-alert>
     <template v-else-if="community">
       <v-tabs v-model="tab" color="primary" class="mb-5">
         <v-tab value="voting">Reglas de votación</v-tab>
@@ -132,7 +133,15 @@ const tab = ref('voting')
 const memberDialog = ref(false)
 const invitationDialog = ref(false)
 const invitations = ref([])
-const settings = reactive({ quorumEnabled: true, quorumPercentage: 50, requireQuorumForVoting: true, defaultMajorityType: 1, defaultMajorityPercentage: 66.67, abstentionPolicy: 1 })
+const defaultSettings = {
+  quorumEnabled: true,
+  quorumPercentage: 50,
+  requireQuorumForVoting: true,
+  defaultMajorityType: 1,
+  defaultMajorityPercentage: 66.67,
+  abstentionPolicy: 1
+}
+const settings = reactive({ ...defaultSettings })
 const newMember = reactive({ name: '', lastName: '', email: '', memberRole: UserRole.CommunityMember })
 const inviteForm = reactive({ expiresInDays: 7, maxUses: 0 })
 const communityItems = computed(() => communities.value.map((c) => ({ title: c.name, value: c.id })))
@@ -149,18 +158,40 @@ onMounted(async () => {
   } catch (err) { error.value = apiMessage(err, 'Error cargando comunidades.') }
   if (!selectedId.value) loading.value = false
 })
-watch(selectedId, loadCommunity)
+watch(selectedId, loadCommunity, { immediate: true })
+watch(() => route.params.id, (id) => {
+  const routeId = String(id || '')
+  if (routeId && routeId !== selectedId.value) selectedId.value = routeId
+})
 
 async function loadCommunity(id) {
-  if (!id) return
+  if (!id) {
+    community.value = null
+    members.value = []
+    loading.value = false
+    return
+  }
   loading.value = true
   error.value = ''
+  message.value = ''
+  community.value = null
+  members.value = []
+  Object.assign(settings, defaultSettings)
   try {
     const [current, currentMembers, currentSettings] = await Promise.all([services.community(id), services.members(id), services.communityVotingSettings(id)])
     community.value = current
     members.value = currentMembers
-    Object.assign(settings, currentSettings)
-  } catch (err) { error.value = apiMessage(err, 'Error cargando la configuración.') }
+    Object.assign(settings, defaultSettings, {
+      quorumEnabled: currentSettings.quorumEnabled,
+      quorumPercentage: currentSettings.quorumPercentage,
+      requireQuorumForVoting: currentSettings.requireQuorumForVoting,
+      defaultMajorityType: currentSettings.defaultMajorityType,
+      defaultMajorityPercentage: currentSettings.defaultMajorityPercentage ?? defaultSettings.defaultMajorityPercentage,
+      abstentionPolicy: currentSettings.abstentionPolicy
+    })
+  } catch (err) {
+    error.value = apiMessage(err, 'Error cargando la configuración.')
+  }
   finally { loading.value = false }
 }
 async function saveVotingSettings() {
@@ -205,12 +236,20 @@ async function createInvitation() {
   try {
     const created = await services.createInvitation(selectedId.value, { communityId: selectedId.value, ...inviteForm })
     invitations.value = [created, ...invitations.value]
-    await copy(created.inviteUrl)
+    try {
+      await copy(created.inviteUrl)
+    } catch {
+      toast.warning('Invitación creada, pero no se pudo copiar el enlace.')
+    }
   } catch (err) { toast.error(apiMessage(err, 'Error generando la invitación.')) }
   finally { saving.value = false }
 }
 async function copy(text) {
-  await navigator.clipboard.writeText(text)
-  toast.success('Enlace copiado al portapapeles.')
+  try {
+    await navigator.clipboard.writeText(text)
+    toast.success('Enlace copiado al portapapeles.')
+  } catch {
+    toast.error('No se pudo copiar el enlace al portapapeles.')
+  }
 }
 </script>

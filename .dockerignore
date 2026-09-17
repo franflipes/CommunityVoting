@@ -1,0 +1,20 @@
+**/.git
+**/.vs
+**/.idea
+**/bin
+**/obj
+**/node_modules
+# Allow frontend/dist when using frontend/Dockerfile (static nginx image).
+# **/dist
+**/TestResults
+**/*.user
+**/*.suo
+**/docker-data
+**/docker-uploads
+src/CommunityVoting.Maui
+src/CommunityVoting.AppHost
+tests
+*.md
+.env
+.env.*
+!frontend/.env.example

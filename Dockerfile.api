@@ -1,0 +1,36 @@
+# Multi-service ASP.NET Core 9 API image (Podman / Docker).
+# Build: podman build -f Dockerfile.api --build-arg PROJECT=CommunityVoting.API -t communityvoting-main-api .
+ARG PROJECT=CommunityVoting.API
+
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
+ARG PROJECT
+WORKDIR /src
+
+COPY src/CommunityVoting.Domain/CommunityVoting.Domain.csproj CommunityVoting.Domain/
+COPY src/CommunityVoting.Application/CommunityVoting.Application.csproj CommunityVoting.Application/
+COPY src/CommunityVoting.Infrastructure/CommunityVoting.Infrastructure.csproj CommunityVoting.Infrastructure/
+COPY src/CommunityVoting.ServiceDefaults/CommunityVoting.ServiceDefaults.csproj CommunityVoting.ServiceDefaults/
+COPY src/${PROJECT}/${PROJECT}.csproj ${PROJECT}/
+
+RUN dotnet restore ${PROJECT}/${PROJECT}.csproj
+
+COPY src/CommunityVoting.Domain/ CommunityVoting.Domain/
+COPY src/CommunityVoting.Application/ CommunityVoting.Application/
+COPY src/CommunityVoting.Infrastructure/ CommunityVoting.Infrastructure/
+COPY src/CommunityVoting.ServiceDefaults/ CommunityVoting.ServiceDefaults/
+COPY src/${PROJECT}/ ${PROJECT}/
+
+RUN dotnet publish ${PROJECT}/${PROJECT}.csproj -c Release -o /app/publish --no-restore
+
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS final
+ARG PROJECT
+WORKDIR /app
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+EXPOSE 8080
+ENV ASPNETCORE_URLS=http://+:8080
+ENV DOTNET_RUNNING_IN_CONTAINER=true
+ENV APP_DLL=${PROJECT}.dll
+COPY --from=build /app/publish .
+ENTRYPOINT ["sh", "-c", "exec dotnet \"$APP_DLL\""]

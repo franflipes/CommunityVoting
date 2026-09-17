@@ -15,7 +15,7 @@
             <v-btn variant="tonal" prepend-icon="mdi-key-variant" @click="openAccesses">Accesos</v-btn>
             <v-btn variant="tonal" prepend-icon="mdi-pencil-outline" @click="openMeetingEdit">Editar</v-btn>
             <v-btn variant="tonal" prepend-icon="mdi-format-list-numbered" @click="agendaDialog = true">Añadir punto</v-btn>
-            <v-btn color="primary" prepend-icon="mdi-plus" @click="openProposal()">Nueva propuesta</v-btn>
+            <v-btn color="primary" prepend-icon="mdi-plus" :disabled="!meeting.agendaItems?.length" @click="openProposal()">Nueva propuesta</v-btn>
           </div>
         </div>
         <div class="meta-grid">
@@ -181,14 +181,14 @@
     <v-dialog v-model="accessDialog" max-width="850">
       <v-card class="panel"><DialogHeader icon="mdi-key-variant" @close="accessDialog = false">Accesos de votantes</DialogHeader><v-card-text>
         <div class="d-flex flex-wrap ga-2 mb-4">
-          <v-btn variant="tonal" prepend-icon="mdi-content-copy" :disabled="!accesses.length" @click="copyAllAccesses">Copiar todos</v-btn>
+          <v-btn variant="tonal" prepend-icon="mdi-content-copy" :disabled="!copyableAccesses.length" @click="copyAllAccesses">Copiar credenciales visibles</v-btn>
           <v-btn color="primary" prepend-icon="mdi-refresh" :loading="saving" @click="generateAccesses">Sincronizar / generar faltantes</v-btn>
         </div>
         <v-list bg-color="transparent">
           <v-list-item v-for="access in accesses" :key="access.id" :title="`${access.userName} (${access.userEmail})`" :subtitle="access.accessUrl" class="break-word">
             <template #prepend><v-chip size="x-small" :color="access.isRevoked ? 'error' : 'success'">{{ access.isRevoked ? 'Revocado' : 'Activo' }}</v-chip></template>
             <template #append>
-              <v-btn icon="mdi-content-copy" variant="text" @click="copyAccess(access)" />
+              <v-btn icon="mdi-content-copy" variant="text" :disabled="!canCopyAccess(access)" @click="copyAccess(access)" />
               <v-btn icon="mdi-refresh" variant="text" @click="regenerateAccess(access)" />
               <v-btn v-if="!access.isRevoked" icon="mdi-cancel" color="error" variant="text" @click="revokeAccess(access)" />
             </template>
@@ -231,6 +231,7 @@ const quorum = ref(null)
 const statuses = ref({})
 const participants = ref([])
 const accesses = ref([])
+const copyableAccesses = computed(() => accesses.value.filter(canCopyAccess))
 const loading = ref(true)
 const saving = ref(false)
 const error = ref('')
@@ -264,8 +265,20 @@ onMounted(async () => {
 onBeforeUnmount(() => connection?.stop())
 async function load() {
   loading.value = true
+  error.value = ''
+  statuses.value = {}
   try {
-    ;[meeting.value, statuses.value, quorum.value] = await Promise.all([services.meeting(id.value), services.meetingVotingStatuses(id.value), services.quorum(id.value)])
+    ;[meeting.value, quorum.value, participants.value] = await Promise.all([
+      services.meeting(id.value),
+      services.quorum(id.value),
+      services.participants(id.value)
+    ])
+    present.value = participants.value.some((person) => person.userId === authStore.user?.id && person.isPresent)
+    try {
+      statuses.value = await services.meetingVotingStatuses(id.value)
+    } catch {
+      statuses.value = {}
+    }
     agendaForm.order = Math.max(0, ...(meeting.value.agendaItems || []).map((item) => item.order || 0)) + 1
   } catch (err) { error.value = apiMessage(err, 'Error cargando la reunión.') }
   finally { loading.value = false }
@@ -312,6 +325,7 @@ function openProposal(agendaItemId = '', proposal = null) {
 }
 async function saveProposal() {
   const options = proposalForm.options.map((option) => option.trim()).filter(Boolean)
+  if (!proposalForm.agendaItemId) { toast.warning('Debes crear o seleccionar primero un punto del orden del día.'); return }
   if (options.length < 2) { toast.warning('Debes indicar al menos dos opciones.'); return }
   await runSave(async () => {
     if (editingProposal.value) {
@@ -332,10 +346,16 @@ async function startVoting(proposal) {
   if (existing.sessionId) { await router.push(`/voting/${existing.sessionId}`); return }
   if (new Date() < new Date(meeting.value.scheduledAt)) { toast.warning(`No se puede iniciar antes de ${formatDate(meeting.value.scheduledAt)}.`); return }
   try {
+    const meetingSettings = meeting.value.votingSettings || {}
+    const majorityType = proposal.majorityType ?? meetingSettings.defaultMajorityType ?? MajorityType.SimpleMajority
+    const majorityPercentage = proposal.majorityPercentage ?? meetingSettings.defaultMajorityPercentage
     const session = await services.createVotingSession({
       proposalId: proposal.id, meetingId: meeting.value.id, communityId: meeting.value.communityId,
-      agendaItemId: proposal.agendaItemId, title: proposal.title, description: proposal.description,
+      agendaItemId: proposal.agendaItemId, agendaItemTitle: proposal.agendaItemTitle,
+      title: proposal.title, description: proposal.description,
       displayOrder: proposal.order, meetingName: meeting.value.title,
+      majorityType: Number(majorityType),
+      majorityPercentage: majorityType === MajorityType.QualifiedMajority ? Number(majorityPercentage ?? 66.67) : null,
       options: proposal.options.map((option) => ({ id: option.id, label: option.label }))
     })
     await services.prepareVotingSession(session.id)
@@ -435,13 +455,19 @@ async function revokeAccess(access) {
   catch (err) { toast.error(apiMessage(err, 'Error revocando el acceso.')) }
 }
 async function copyAccess(access) {
-  const code = access.code && access.code !== '[PROTECTED_CODE]' ? access.code : 'Código registrado'
-  await navigator.clipboard.writeText(`Acceso a "${meeting.value.title}":\nEnlace: ${access.accessUrl}\nCódigo: ${code}`)
+  if (!canCopyAccess(access)) {
+    toast.warning('Regenera este acceso para obtener credenciales nuevas.')
+    return
+  }
+  await navigator.clipboard.writeText(`Acceso a "${meeting.value.title}":\nEnlace: ${access.accessUrl}\nCódigo: ${access.code}`)
   toast.success('Acceso copiado.')
 }
 async function copyAllAccesses() {
-  await navigator.clipboard.writeText(accesses.value.map((access) => `${access.userName} (${access.userEmail})\nEnlace: ${access.accessUrl}\nCódigo: ${access.code || '(registrado)'}`).join('\n\n'))
-  toast.success('Todos los accesos copiados.')
+  await navigator.clipboard.writeText(copyableAccesses.value.map((access) => `${access.userName} (${access.userEmail})\nEnlace: ${access.accessUrl}\nCódigo: ${access.code}`).join('\n\n'))
+  toast.success('Credenciales visibles copiadas.')
+}
+function canCopyAccess(access) {
+  return Boolean(access?.code && access.code !== '[PROTECTED_CODE]' && access?.accessUrl && !access.accessUrl.includes('existing-token-placeholder'))
 }
 async function runSave(action, success, fallback) {
   saving.value = true

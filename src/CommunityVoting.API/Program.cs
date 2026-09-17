@@ -84,7 +84,7 @@ using (var scope = app.Services.CreateScope())
     var logger = scope.ServiceProvider.GetService<ILogger<Program>>();
 
     await context.WaitForDatabaseAsync(logger);
-    await context.Database.EnsureCreatedAsync();
+    await context.Database.MigrateAsync();
 
     if (!context.Users.Any())
     {
